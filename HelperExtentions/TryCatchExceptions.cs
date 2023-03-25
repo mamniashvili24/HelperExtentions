@@ -4,7 +4,7 @@ namespace HelperExtentions
 {
     public static class TryCatchExceptions
     {
-        public static void TryCatchFinally<ExeptionType>(Action tryAction, Action<ExeptionType> catchAction, Action finallyAction)
+        public static void TryCatchFinally<ExeptionType>(this Action tryAction, Action<ExeptionType> catchAction, Action finallyAction)
             where ExeptionType : Exception
         {
             try
@@ -21,12 +21,12 @@ namespace HelperExtentions
             }
         }
 
-        public static void TryCatchFinally(Action tryAction, Action<Exception> catchAction, Action finallyAction)
+        public static void TryCatchFinally(this Action tryAction, Action<Exception> catchAction, Action finallyAction)
         {
             TryCatchFinally<Exception>(tryAction, catchAction, finallyAction);
         }
 
-        public static void TryCatch<ExeptionType>(Action tryAction, Action<ExeptionType> catchAction)
+        public static void TryCatch<ExeptionType>(this Action tryAction, Action<ExeptionType> catchAction)
             where ExeptionType : Exception
         {
             try
@@ -39,12 +39,12 @@ namespace HelperExtentions
             }
         }
 
-        public static void TryCatch(Action tryAction, Action<Exception> catchAction)
+        public static void TryCatch(this Action tryAction, Action<Exception> catchAction)
         {
             TryCatch<Exception>(tryAction, catchAction);
         }
 
-        public static void TryFinally(Action tryAction, Action finallyAction)
+        public static void TryFinally(this Action tryAction, Action finallyAction)
         {
             try
             {
