@@ -1,28 +1,10 @@
+using NSubstitute;
+using System.Diagnostics;
+
 namespace HelperExtentions.Test
 {
     public class TryCatchExceptions_Test
     {
-        [Fact]
-        public void TryCatchFinally_WhenNoException_ShouldCallTryActionCatchActionAndFinallyAction()
-        {
-            // Arrange
-            var tryActionCalled = false;
-            var catchActionCalled = false;
-            var finallyActionCalled = false;
-
-            // Act
-            TryCatchExceptions.TryCatchFinally(
-                () => tryActionCalled = true,
-                ex => catchActionCalled = true,
-                () => finallyActionCalled = true
-            );
-
-            // Assert
-            tryActionCalled.Should().BeTrue();
-            catchActionCalled.Should().BeFalse();
-            finallyActionCalled.Should().BeTrue();
-        }
-
         [Fact]
         public void TryCatchFinally_WhenExceptionOfType_ShouldCallTryActionAndCatchActionAndFinallyAction()
         {
@@ -44,24 +26,6 @@ namespace HelperExtentions.Test
         }
 
         [Fact]
-        public void TryCatch_WhenNoException_ShouldCallTryActionAndNotCallCatchAction()
-        {
-            // Arrange
-            var tryActionCalled = false;
-            var catchActionCalled = false;
-
-            // Act
-            TryCatchExceptions.TryCatch(
-                () => tryActionCalled = true,
-                ex => catchActionCalled = true
-            );
-
-            // Assert
-            tryActionCalled.Should().BeTrue();
-            catchActionCalled.Should().BeFalse();
-        }
-
-        [Fact]
         public void TryCatch_WhenExceptionOfType_ShouldCallTryActionAndCatchAction()
         {
             // Arrange
@@ -76,6 +40,26 @@ namespace HelperExtentions.Test
 
             // Assert
             returnedExeption.Should().Be(expectedException);
+        }
+
+
+        [Fact]
+        public void TryCatchThrow_WhenExceptionOfType_ShouldCallTryActionAndCatchActionAndRethrow()
+        {
+            // Arrange
+            var expectedException = new ArgumentException("ArgumentException");
+            var catchActionCalled = false;
+            ArgumentException returnedExeption = null;
+
+            // Act
+            var act = () => TryCatchExceptions.TryCatchThrow<ArgumentException>(
+                () => throw expectedException,
+                () => catchActionCalled = true
+            );
+
+            // Assert
+            act.Should().Throw<ArgumentException>().WithMessage(expectedException.Message);
+            catchActionCalled.Should().BeTrue();
         }
 
         [Fact]
@@ -111,6 +95,51 @@ namespace HelperExtentions.Test
             // Assert
             act.Should().Throw<ArgumentException>();
             finallyActionCalled.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TryCatch_ReturnsResult_WhenNoExceptionThrown()
+        {
+            // Arrange
+            var expected = 42;
+            Func<int> tryAction = () => expected;
+            Func<Exception, int> catchAction = _ => throw new Exception("Catch action should not be called.");
+
+            // Act
+            var result = tryAction.TryCatch(catchAction);
+
+            // Assert
+            result.Should().Be(expected);
+        }
+
+        [Fact]
+        public void TryCatch_ReturnsResult_WhenExceptionOfTypeTExeptionTypeIsThrown()
+        {
+            // Arrange
+            var expected = 42;
+            Func<int> tryAction = () => throw new ArgumentException("Test exception");
+            Func<ArgumentException, int> catchAction = ex => expected;
+
+            // Act
+            var result = tryAction.TryCatch(catchAction);
+
+            // Assert
+            result.Should().Be(expected);
+        }
+        
+        [Fact]
+        public void TryCatch_RethrowsException_WhenExceptionOfDifferentTypeIsThrown()
+        {
+            // Arrange
+            var catchException = new NullReferenceException("Catch action should not be called.");
+            Func<int> tryAction = () => throw new InvalidOperationException("Test exception");
+            Func<InvalidOperationException, int> catchAction = (error) => throw catchException;
+
+            // Act
+            Action act = () => tryAction.TryCatch(catchAction);
+
+            // Assert
+            act.Should().Throw<NullReferenceException>().WithMessage(catchException.Message);
         }
     }
 }

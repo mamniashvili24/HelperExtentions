@@ -21,11 +21,6 @@ namespace HelperExtentions
             }
         }
 
-        public static void TryCatchFinally(this Action tryAction, Action<Exception> catchAction, Action finallyAction)
-        {
-            TryCatchFinally<Exception>(tryAction, catchAction, finallyAction);
-        }
-
         public static void TryCatch<ExeptionType>(this Action tryAction, Action<ExeptionType> catchAction)
             where ExeptionType : Exception
         {
@@ -39,9 +34,18 @@ namespace HelperExtentions
             }
         }
 
-        public static void TryCatch(this Action tryAction, Action<Exception> catchAction)
+        public static void TryCatchThrow<ExeptionType>(this Action tryAction, Action catchAction)
+            where ExeptionType : Exception
         {
-            TryCatch<Exception>(tryAction, catchAction);
+            try
+            {
+                tryAction();
+            }
+            catch (ExeptionType)
+            {
+                catchAction();
+                throw;
+            }
         }
 
         public static void TryFinally(this Action tryAction, Action finallyAction)
@@ -54,6 +58,23 @@ namespace HelperExtentions
             {
                 finallyAction();
             }
+        }
+
+        public static TReturnType TryCatch<TReturnType, TExeptionType>(this Func<TReturnType> tryFunc, Func<TExeptionType, TReturnType> catchFunc)
+            where TExeptionType : Exception
+        {
+            TReturnType result;
+
+            try
+            {
+                result = tryFunc();
+            }
+            catch (TExeptionType ex)
+            {
+                result = catchFunc(ex);
+            }
+
+            return result;
         }
     }
 }
